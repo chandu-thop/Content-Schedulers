@@ -42,7 +42,7 @@ const features = [
 
 export default function Features() {
     return (
-        <section id="features" className="py-24 bg-slate-50">
+        <section id="features" className="py-24 bg-transparent">
             <div className="max-w-6xl mx-auto px-4 sm:px-6">
                 <div className="text-center mb-16">
                     <div className="mb-6 inline-flex items-center gap-1.5 bg-red-500/10 border border-red-500/15 text-red-500 text-[11px] font-medium tracking-[0.06em] uppercase px-3.5 py-1.5 rounded-full">
@@ -57,16 +57,35 @@ export default function Features() {
                     <p className="mt-5 text-gray-500 max-w-xl mx-auto leading-relaxed">From content creation to scheduling — Scheduler handles it all so you can focus on what matters most.</p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {features.map((f) => (
-                        <div key={f.title} className="bg-white rounded-2xl border border-slate-100 p-6 hover:border-slate-200 hover:shadow-md hover:shadow-slate-100 group">
-                            <div className={`size-10 rounded-xl flex items-center justify-center mb-4 ${f.color}`}>
-                                <f.icon className="size-5" />
+                <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px_1fr] gap-6 items-start">
+                    {/* Left Column Features */}
+                    <div className="space-y-6">
+                        {features.filter((_, idx) => idx % 2 === 0).map((f) => (
+                            <div key={f.title} className="bg-white/50 border border-white/60 backdrop-blur-md rounded-2xl p-6 hover:bg-white/70 hover:shadow-md transition-all duration-300 group">
+                                <div className={`size-10 rounded-xl flex items-center justify-center mb-4 ${f.color}`}>
+                                    <f.icon className="size-5" />
+                                </div>
+                                <h3 className="text-slate-900 mb-2">{f.title}</h3>
+                                <p className="text-sm text-slate-500/90 leading-relaxed">{f.description}</p>
                             </div>
-                            <h3 className=" text-slate-900 mb-2">{f.title}</h3>
-                            <p className="text-sm text-slate-500/90 leading-relaxed">{f.description}</p>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
+
+                    {/* Center Column - Empty Spacer for Dashboard Visibility */}
+                    <div className="hidden lg:block h-[50px] pointer-events-none" />
+
+                    {/* Right Column Features */}
+                    <div className="space-y-6">
+                        {features.filter((_, idx) => idx % 2 !== 0).map((f) => (
+                            <div key={f.title} className="bg-white/50 border border-white/60 backdrop-blur-md rounded-2xl p-6 hover:bg-white/70 hover:shadow-md transition-all duration-300 group">
+                                <div className={`size-10 rounded-xl flex items-center justify-center mb-4 ${f.color}`}>
+                                    <f.icon className="size-5" />
+                                </div>
+                                <h3 className="text-slate-900 mb-2">{f.title}</h3>
+                                <p className="text-sm text-slate-500/90 leading-relaxed">{f.description}</p>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
         </section>
