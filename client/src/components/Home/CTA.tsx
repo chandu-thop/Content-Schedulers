@@ -3,14 +3,10 @@ import { ArrowRightIcon } from "lucide-react";
 
 export default function CTA() {
     return (
-        <section className="py-20" style={{ background: "#ffffff" }}>
+        <section className="py-20 bg-transparent">
             <div className="max-w-6xl mx-auto px-5 sm:px-8">
                 <div
-                    className="relative rounded-3xl overflow-hidden p-14 sm:p-20 text-center"
-                    style={{
-                        background: "linear-gradient(145deg, #fff5f5 0%, #fef2f2 100%)",
-                        border: "1.5px solid rgba(239,68,68,0.12)",
-                    }}
+                    className="relative rounded-3xl overflow-hidden p-14 sm:p-20 text-center bg-white/45 border border-white/60 backdrop-blur-md hover:bg-white/55 transition-all duration-300"
                 >
                     {/* Glow blobs */}
                     <div className="absolute top-0 right-0 w-96 h-96 rounded-full pointer-events-none" style={{ background: "radial-gradient(circle, rgba(239,68,68,0.1) 0%, transparent 70%)" }} />

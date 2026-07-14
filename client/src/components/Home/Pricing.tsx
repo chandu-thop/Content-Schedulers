@@ -33,7 +33,7 @@ const pricingPlans = [
 
 export default function Pricing() {
     return (
-        <section id="pricing" className="py-24 bg-white">
+        <section id="pricing" className="py-24 bg-transparent">
             <div className="max-w-6xl mx-auto px-4 sm:px-6">
                 <div className="text-center mb-16">
                     <div className="mb-6 inline-flex items-center gap-1.5 bg-red-500/10 border border-red-500/15 text-red-500 text-[11px] font-medium tracking-[0.06em] uppercase px-3.5 py-1.5 rounded-full">
@@ -50,7 +50,7 @@ export default function Pricing() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start">
                     {pricingPlans.map((plan) => (
-                        <div key={plan.name} className={`rounded-2xl border p-7 flex flex-col gap-6 relative ${plan.highlight ? "bg-red-500 text-white border-red-400 shadow-2xl shadow-red-100" : "bg-white text-slate-900 border-slate-200"}`}>
+                        <div key={plan.name} className={`rounded-2xl border p-7 flex flex-col gap-6 relative backdrop-blur-md transition-all duration-300 ${plan.highlight ? "bg-red-500/90 text-white border-red-400/80 shadow-lg" : "bg-white/50 text-slate-900 border-white/60 hover:bg-white/70 hover:shadow-md"}`}>
                             {plan.highlight && <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs font-bold px-3.5 py-1.5 rounded-full">Most Popular</div>}
                             <div>
                                 <div className={`text-sm font-semibold mb-1 ${plan.highlight ? "text-red-100" : "text-red-500"}`}>{plan.name}</div>
@@ -64,7 +64,7 @@ export default function Pricing() {
                             <ul className="space-y-2.5">
                                 {plan.features.map((f) => (
                                     <li key={f} className="flex items-center gap-2.5 text-sm">
-                                        <div className={`size-4 rounded-full flex items-center justify-center shrink-0 ${plan.highlight ? "bg-red-400" : "bg-red-50"}`}>
+                                        <div className={`size-4 rounded-full flex items-center justify-center shrink-0 ${plan.highlight ? "bg-red-400/90" : "bg-red-50/70"}`}>
                                             <CheckIcon className={`w-2.5 h-2.5 ${plan.highlight ? "text-white" : "text-red-500"}`} />
                                         </div>
                                         <span className={plan.highlight ? "text-red-50" : "text-slate-600"}>{f}</span>
