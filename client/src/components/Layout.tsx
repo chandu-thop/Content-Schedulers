@@ -8,7 +8,7 @@ import { MenuIcon } from 'lucide-react';
    const pageTitles:Record<string,string>={
         '/dashboard': 'Dashboard',
         '/account': ' Social Account',
-        '/scheduler': 'Social Scheduler',
+        '/scheduler': 'Post Scheduler',
         '/aicomposer': 'AI Composer'
         
     }
@@ -35,7 +35,7 @@ export default function Layout() {
                         <MenuIcon/>
                     </button>
                     <div>
-                        <h1 className='text-slate-900'>{title}</h1>
+                        <h1 className='text-lg font-semibold text-slate-900'>{title}</h1>
                         <p className='text-sm text-slate-400 hidden sm:block'>Manage and automate your social presence</p>
                     </div>
 
