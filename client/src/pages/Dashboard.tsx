@@ -1,5 +1,5 @@
 import { ActivityIcon, CheckCircleIcon, ClockIcon, SendIcon, TrendingUpIcon } from "lucide-react";
-import { Activity, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { dummyAccountsData, dummyActivityData, dummyPostsData } from "../assets/assets";
 
 
@@ -61,7 +61,7 @@ export default function Dashboard() {
       </div>
       {/* Stats cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-          {statCards.map((card, index) => (
+          {statCards.map((card) => (
             <div key={card.label} className="bg-white hover:bg-red-50 relative
             border border-slate-200 rounded-2xl p-5 hover:border-red-200 transition-all">
               <div className="flex items-center justify-between mb-4">

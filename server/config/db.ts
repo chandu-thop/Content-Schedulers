@@ -10,7 +10,7 @@ const connectDB=async()=>{
 
     }catch(error:any){
         console.error(error);
-        mongoose.exit(1);
+        process.exit(1);
 
     }
 }

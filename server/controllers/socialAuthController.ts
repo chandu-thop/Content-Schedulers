@@ -4,7 +4,7 @@ import { profile } from "node:console";
 import { User } from "../models/User.js";
 import { Query } from "mongoose";
 import Account from "../models/Account.js";
-import { AuthRequest } from "../middlewares/authMiddleWare.js";
+import { AuthRequest } from "../middlewares/authMiddleware.js"
 
 const getOrCreateZernioProfile=async(user:any): Promise<String>=>{  
     try{
@@ -43,7 +43,7 @@ const getOrCreateZernioProfile=async(user:any): Promise<String>=>{
 export const generateAuthUrl=async(req:AuthRequest,res:Response):Promise<void>=>{
     try{
         const {platform}=req.params;
-        const profiled =await getOrCreateZernioProfile(req.user);
+        const profileId =await getOrCreateZernioProfile(req.user);
 
         const origin=req.headers.origin;
         const redirectUrl=`${origin}/accounts`;
@@ -102,7 +102,7 @@ export const syncAccounts=async (req:AuthRequest,res:Response):Promise<void>=>{
                 continue;
             }
 
-            const account= await Account.findByIdAndUpdate({
+        const account= await Account.findOneAndUpdate({
                 zernioAccountId:zid
             },{user:req.user._id,
                 platform:normalizedPlatform,

@@ -31,7 +31,7 @@ export default function Layout() {
 
             <div className='flex-1 flex flex-col overflow-hidden'>
                 <header className='h-16 bg-white border-b border-slate-200 flex items-center px-4 md:px-8 gap-4'>
-                    <button className='md:hidden p-2-ml-2 text-slate-500' onClick={()=> setIsMobileMenuOpen(!isMobileMenuOpen)}>
+                    <button className='md:hidden -ml-2 p-2 text-slate-500' onClick={()=> setIsMobileMenuOpen(!isMobileMenuOpen)}>
                         <MenuIcon/>
                     </button>
                     <div>
