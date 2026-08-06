@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { AuthRequest } from "../middlewares/authMiddleWare.js";
+import { AuthRequest } from "../middlewares/authMiddleware.js";
 import { GoogleGenAI } from "@google/genai";
 import Replicate from "replicate";
 import { cloudinary } from "../config/cloudinary.js";
@@ -143,14 +143,14 @@ Example:
       }
     }
 
-   const generation = await Generation.create({
+     const generation = await Generation.create({
     user: req.user!._id,
     prompt,
     content,
     mediaUrl,
     mediaType: mediaUrl ? "image" : undefined,
-    tone,r
-});
+    tone: tone
+  });
 
 res.status(201).json(generation);
   } catch (error: any) {
@@ -222,7 +222,7 @@ export const schedulePost=async(req:AuthRequest,res:Response): Promise<void>=>{
 
             });
             mediaUrl=result.secure_url;
-            mediaType=result.resource_type==="video" ? "video" :" image";
+            mediaType=result.resource_type==="video" ? "video" :"image";
 
       }
       const post =await Post.create({
