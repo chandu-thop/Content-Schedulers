@@ -3,8 +3,8 @@ import {useState,useEffect} from "react";
 import type { FormEvent } from "react";
 import { CalendarRangeIcon, XIcon,ClockIcon, CalendarDaysIcon } from "lucide-react";
 
-import "react-time-picker/dist/TimePicker.css";
-import "react-clock/dist/Clock.css";
+// import "react-time-picker/dist/TimePicker.css";
+// import "react-clock/dist/Clock.css";
 import { PLATFORMS } from "../assets/assets";
 export default function Scheduler() {
   const [content,setContent]=useState("");
