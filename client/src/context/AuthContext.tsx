@@ -20,6 +20,13 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const getApiBaseUrl = () => {
+    const rawApiUrl = import.meta.env.VITE_API_BASE_URL;
+    if (rawApiUrl) {
+        let sanitized = rawApiUrl.replace(/^"(.*)"$/, "$1").replace(/\/$/, "");
+        if (sanitized && sanitized !== "/") {
+            return sanitized;
+        }
+    }
     return "";
 };
 
