@@ -33,7 +33,7 @@ export const generatePost = async (
 
     // Generate Post + Image Prompt
     const textResponse = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-flash-latest",
       contents: `
 Generate a professional social media post.
 
@@ -68,9 +68,9 @@ Example:
       const data = jsonMatch
         ? JSON.parse(jsonMatch[0])
         : {
-            content: rawText,
-            imagePrompt: prompt,
-          };
+          content: rawText,
+          imagePrompt: prompt,
+        };
 
       content = data.content;
       imagePrompt = data.imagePrompt;
@@ -81,9 +81,9 @@ Example:
 
     let mediaUrl = "";
 
-    
+
     // Generate Image (Replicate)
-   
+
     if (generateImage) {
       if (!replicateToken) {
         res.status(500).json({
@@ -143,101 +143,115 @@ Example:
       }
     }
 
-     const generation = await Generation.create({
-    user: req.user!._id,
-    prompt,
-    content,
-    mediaUrl,
-    mediaType: mediaUrl ? "image" : undefined,
-    tone: tone
-  });
+    const generation = await Generation.create({
+      user: req.user!._id,
+      prompt,
+      content,
+      mediaUrl,
+      mediaType: mediaUrl ? "image" : undefined,
+      tone: tone
+    });
 
-res.status(201).json(generation);
+    res.status(201).json(generation);
   } catch (error: any) {
     console.error("Generate Post Error:", error);
 
+    let rawMessage = error?.response?.data?.message || error?.message || "";
+    let friendlyMessage = rawMessage;
+
+    if (typeof rawMessage === "string" && rawMessage.trim().includes("{\"error\":")) {
+      try {
+        const jsonStart = rawMessage.indexOf("{");
+        const jsonString = rawMessage.substring(jsonStart);
+        const parsed = JSON.parse(jsonString);
+        if (parsed?.error?.message) {
+          friendlyMessage = parsed.error.message;
+        }
+      } catch (e) {
+        // Fallback
+      }
+    }
+
     res.status(500).json({
       success: false,
-      message:
-        error?.response?.data?.message ||
-        error?.message ||
-        "Something went wrong while generating the post.",
+      message: friendlyMessage || "Something went wrong while generating the post.",
     });
   }
 };
 //Get generations
 // GET /api/posts/generations
-export const getGenerations=async(req:AuthRequest,res:Response): Promise<void>=>{
-    try{
-        const generations=await Generation.find({user:req.user._id}).sort({createdAt: -1});
-        res.json(generations);
+export const getGenerations = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const generations = await Generation.find({ user: req.user._id }).sort({ createdAt: -1 });
+    res.json(generations);
 
-    }catch(error:any){
-        res.status(500).json({message:error?.message || "Server error"});
-    }
+  } catch (error: any) {
+    res.status(500).json({ message: error?.message || "Server error" });
+  }
 
 }
 
 //Get posts
 //GET /api/posts
 
-export const getPosts=async(req:AuthRequest,res:Response): Promise<void>=>{
-    try{
-         const posts = await Post.find({user:req.user._id});
-         res.json(posts);
-    }catch(err:any){
-        res.status(500).json({message:err?.message || "Server error"});
+export const getPosts = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const posts = await Post.find({ user: req.user._id });
+    res.json(posts);
+  } catch (err: any) {
+    res.status(500).json({ message: err?.message || "Server error" });
 
-    }
+  }
 
 }
 
 //Schedule post
 //POST /api/posts
-export const schedulePost=async(req:AuthRequest,res:Response): Promise<void>=>{
-    try{
-        const {content,platforms,scheduledFor,status}=req.body;
-        //parse platform if it comes as a stringified array from FormData
+export const schedulePost = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { content, platforms, scheduledFor, status } = req.body;
+    //parse platform if it comes as a stringified array from FormData
 
-        let parsedPlatforms=platforms;
-        if(typeof platforms=== "string"){
-            try{
-                parsedPlatforms=JSON.parse(platforms);
-            }catch(e){
-                parsedPlatforms=platforms.split(" ");
-
-            }
-        }
-        let mediaUrl: string|undefined=req.body.mediaUrl;
-        let mediaType:"image"|"video"|undefined=req.body.mediaType;
-      if(req.file){
-        const result=await new Promise<any>((resolve,reject)=>{
-            const stream =cloudinary.uploader.upload_stream({
-                resource_type:"auto",
-                folder:"social-scheduler"},(error,result)=>{
-                    if(error) reject(error);
-                    else resolve(result);
-                });
-                stream.end(req.file!.buffer);
-
-            });
-            mediaUrl=result.secure_url;
-            mediaType=result.resource_type==="video" ? "video" :"image";
+    let parsedPlatforms = platforms;
+    if (typeof platforms === "string") {
+      try {
+        parsedPlatforms = JSON.parse(platforms);
+      } catch (e) {
+        parsedPlatforms = platforms.split(" ");
 
       }
-      const post =await Post.create({
-        user:req.user._id,
-        content,
-        platform:parsedPlatforms,
-        mediaUrl,
-        mediaType,
-        scheduledFor,
-        status
-      });
-      res.status(201).json(post);
-    }catch(err:any){
-       res.status(500).json({message:err?.message || "server error"})
     }
+    let mediaUrl: string | undefined = req.body.mediaUrl;
+    let mediaType: "image" | "video" | undefined = req.body.mediaType;
+    if (req.file) {
+      const result = await new Promise<any>((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream({
+          resource_type: "auto",
+          folder: "social-scheduler"
+        }, (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        });
+        stream.end(req.file!.buffer);
+
+      });
+      mediaUrl = result.secure_url;
+      mediaType = result.resource_type === "video" ? "video" : "image";
+
+    }
+    const post = await Post.create({
+      user: req.user._id,
+      content,
+      platform: parsedPlatforms,
+      mediaUrl,
+      mediaType,
+      scheduledFor,
+      status
+    });
+    res.status(201).json(post);
+  } catch (err: any) {
+    res.status(500).json({ message: err?.message || "server error" })
+  }
 
 }
 

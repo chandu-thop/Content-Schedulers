@@ -1,19 +1,19 @@
 import { useState, useEffect } from "react";
-import { dummyGenerationData, PLATFORMS } from "../assets/assets";
-import { ArrowRightIcon, Loader2Icon, HistoryIcon, Wand2Icon, XIcon, CalendarIcon, ClockIcon,TimerIcon } from "lucide-react";
-
+import { PLATFORMS } from "../assets/assets";
+import { ArrowRightIcon, Loader2Icon, HistoryIcon, Wand2Icon, XIcon, CalendarIcon, ClockIcon, TimerIcon } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 
 export default function AIComposer() {
-
+  const { apiFetch } = useAuth();
+  const { showToast } = useToast();
   const [prompt, setPrompt] = useState("");
   const [tone, setTone] = useState("Professional");
   const [generateImage, setGenerateImage] = useState(false);
   const [loading, setLoading] = useState(false);
   const [generations, setGenerations] = useState<any[]>([]);
 
-
   //Scheduling state
-
   const [activeScheduler, setActiveScheduler] = useState<any>(null);
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [scheduledDate, setScheduledDate] = useState("");
@@ -21,27 +21,80 @@ export default function AIComposer() {
   const [scheduling, setScheduling] = useState(false);
 
   const fetchGenerations = async () => {
-    setGenerations(dummyGenerationData);
-
+    try {
+      const data = await apiFetch("/api/posts/generations");
+      setGenerations(data);
+    } catch (e: any) {
+      console.error("Error fetching generations:", e);
+      showToast("Error fetching past generations: " + (e.message || e), "error");
+    }
   }
+
   useEffect(() => {
     fetchGenerations();
-  }, []);
+  }, [apiFetch]);
 
   const handleGenerate = async () => {
+    if (!prompt) return;
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-    }, 2000);
+    try {
+      const data = await apiFetch("/api/posts/generate", {
+        method: "POST",
+        body: JSON.stringify({ prompt, tone, generateImage }),
+      });
+      setGenerations((old) => [data, ...old]);
+      setPrompt("");
+      showToast("Content generated successfully!", "success");
+    } catch (err: any) {
+      showToast("Failed to generate content: " + (err.message || err), "error");
+    } finally {
+      loadingStatusFix();
+    }
   }
 
-  const handleSchedule =async ()=>{
-    setScheduling(true);
-    setTimeout(() => {
-      setScheduling(false);
-    }, 2000);
+  const loadingStatusFix = () => {
+    setLoading(false);
   }
-  
+
+  const handleSchedule = async () => {
+    if (!activeScheduler) return;
+    if (selectedPlatforms.length === 0) {
+      showToast("Please select at least one platform", "warning");
+      return;
+    }
+    setScheduling(true);
+    try {
+      const scheduledDateTime = new Date(`${scheduledDate}T${scheduledTime}`);
+
+      const payload: any = {
+        content: activeScheduler.content,
+        platforms: selectedPlatforms,
+        scheduledFor: scheduledDateTime.toISOString(),
+        status: "scheduled",
+      };
+
+      if (activeScheduler.mediaUrl) {
+        payload.mediaUrl = activeScheduler.mediaUrl;
+        payload.mediaType = "image";
+      }
+
+      await apiFetch("/api/posts", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+
+      setActiveScheduler(null);
+      setSelectedPlatforms([]);
+      setScheduledDate("");
+      setScheduledTime("");
+      showToast("Post scheduled successfully!", "success");
+    } catch (err: any) {
+      showToast("Failed to schedule post: " + (err.message || err), "error");
+    } finally {
+      setScheduling(false);
+    }
+  }
+
   const tones = ["professional", "creative", "funny", "Minimalist", "Excited"];
   return (
     <div className="max-w-4xl mx-auto space-y-12 pb-20 animate-in fade-in duration-700">
@@ -185,34 +238,33 @@ export default function AIComposer() {
                   <label className="block text-xs text-slate-600 uppercase
                 tracking-widest mb-4">Select Channels</label>
                   <div className="flex flex-wrap gap-2">
-{PLATFORMS.map((p) => {
-  const active = selectedPlatforms.includes(p.id);
-  
-  // Assign the component to a Capitalized variable name
-  const IconComponent = p.icon;
-  
-  return (
-    <button
-      key={p.id}
-      onClick={() =>
-        setSelectedPlatforms((prev) =>
-          prev.includes(p.id)
-            ? prev.filter((x) => x !== p.id)
-            : [...prev, p.id]
-        )
-      }
-      className="size-10 flex items-center justify-center" 
-    >
-      <IconComponent 
-        className={`p-2.5 rounded-md border size-full ${
-          active 
-            ? "bg-red-500/80 text-white" 
-            : "bg-white border-slate-200 text-slate-400"
-        }`} 
-      />
-    </button>
-  );
-})}
+                    {PLATFORMS.map((p) => {
+                      const active = selectedPlatforms.includes(p.id);
+
+                      // Assign the component to a Capitalized variable name
+                      const IconComponent = p.icon;
+
+                      return (
+                        <button
+                          key={p.id}
+                          onClick={() =>
+                            setSelectedPlatforms((prev) =>
+                              prev.includes(p.id)
+                                ? prev.filter((x) => x !== p.id)
+                                : [...prev, p.id]
+                            )
+                          }
+                          className="size-10 flex items-center justify-center"
+                        >
+                          <IconComponent
+                            className={`p-2.5 rounded-md border size-full ${active
+                              ? "bg-red-500/80 text-white"
+                              : "bg-white border-slate-200 text-slate-400"
+                              }`}
+                          />
+                        </button>
+                      );
+                    })}
 
                   </div>
                 </div>
@@ -222,14 +274,14 @@ export default function AIComposer() {
                     text-slate-400"/>
                     <input type="date" className="w-full pl-11 pr-4 py-3 bg-slate-50 border
                     border-slate-100 rounded-md text-slate-900 text-sm focus:outline-none
-                    transition-all" value={scheduledDate} onChange={(e)=>setScheduledDate(e.target.value)}/>
+                    transition-all" value={scheduledDate} onChange={(e) => setScheduledDate(e.target.value)} />
                   </div>
                   <div className="relative">
                     <ClockIcon className="size-4 absolute left-4 top-1/2 -translate-y-1/2
                     text-slate-400"/>
                     <input type="time" className="w-full pl-11 pr-4 py-3 bg-slate-50 border
                     border-slate-100 rounded-md text-slate-900 text-sm focus:outline-none
-                    transition-all" value={scheduledTime} onChange={(e)=>setScheduledTime(e.target.value)}/>
+                    transition-all" value={scheduledTime} onChange={(e) => setScheduledTime(e.target.value)} />
                   </div>
 
                 </div>
@@ -237,8 +289,8 @@ export default function AIComposer() {
               </div>
               <button onClick={handleSchedule} className="w-full flex items-center justify-center gap-2 py-3
               rounded-md bg-slte text-slate-700 hover:bg-red-500 hover:text-white-transition">
-                {scheduling ? <Loader2Icon className="size-4 animate-spin"/>:<TimerIcon
-                className="size-4"/>}
+                {scheduling ? <Loader2Icon className="size-4 animate-spin" /> : <TimerIcon
+                  className="size-4" />}
                 Schedule Post
               </button>
             </div>

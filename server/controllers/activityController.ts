@@ -1,17 +1,17 @@
-import {Response} from "express";
-import {AuthRequest} from "../middlewares/authMiddleware.js"
-import {ActivityLog} from "../models/ActivityLog.js";
+import { Response } from "express";
+import { AuthRequest } from "../middlewares/authMiddleware.js"
+import { ActivityLog } from "../models/ActivityLog.js";
 
 //Get all activity
 //GET /api/activity
 
-export const getActivity=async (req:AuthRequest,res:Response): Promise<void>=>{
+export const getActivity = async (req: AuthRequest, res: Response): Promise<void> => {
 
-    try{
-     const activity=await ActivityLog.find({user:req.user._id}).sort({createdAt:-1}).limit(10).populate("relatedPost","content");
-     res.json(activity);
-    } catch(err:any){
-      res.status(500).json({message:err?.messsage|| "Server error"});
-    }
+  try {
+    const activity = await ActivityLog.find({ user: req.user._id }).sort({ createdAt: -1 }).limit(10).populate("relatedPost", "content");
+    res.json(activity);
+  } catch (err: any) {
+    res.status(500).json({ message: err?.message || "Server error" });
+  }
 
 }

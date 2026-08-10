@@ -1,50 +1,50 @@
-import { ActivityIcon, CheckCircleIcon, ClockIcon, SendIcon, TrendingUpIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { dummyAccountsData, dummyActivityData, dummyPostsData } from "../assets/assets";
-
+import { ActivityIcon, CheckCircleIcon, ClockIcon, SendIcon, TrendingUpIcon } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 export default function Dashboard() {
+  const { apiFetch } = useAuth();
+  const [stats, setStats] = useState({ scheduler: 0, published: 0, connectedAccounts: 0 });
+  const [activities, setActivities] = useState<any[]>([]);
 
-  const [stats, setStats] = useState({scheduler: 0, published: 0, connectedAccounts: 0});
-  const [activities,setActivities]=useState<any[]>([]);
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const posts = await apiFetch("/api/posts");
+        const accounts = await apiFetch("/api/accounts");
+        const activity = await apiFetch("/api/activity");
 
-  useEffect(()=>{
-    const fetchDashboardData =async ()=>{
-      try{
-        const [postsRes,accountsRes,activityRes]=[{data:dummyPostsData},{data:dummyAccountsData},
-         {data:dummyActivityData}]
-         const posts=postsRes.data;
-         setStats({
-          scheduler: posts.filter((post:any)=>post.status==="scheduled").length,
-          published: posts.filter((post:any)=>post.status==="published").length,
-          connectedAccounts: accountsRes.data.filter((a:any)=>a.status==='connected').length,
-         })
-         setActivities(activityRes.data)
-      } catch(error:any){
-        console.error("Error fetching dashboard data:",error);
+        setStats({
+          scheduler: posts.filter((post: any) => post.status === "scheduled").length,
+          published: posts.filter((post: any) => post.status === "published").length,
+          connectedAccounts: accounts.filter((a: any) => a.status === 'connected').length,
+        });
+        setActivities(activity);
+      } catch (error: any) {
+        console.error("Error fetching dashboard data:", error);
       }
     }
     fetchDashboardData();
-  },[])
+  }, [apiFetch])
 
-  const statCards=[
+  const statCards = [
     {
-      label:"Scheduled Posts",
-      value:stats.scheduler,
-      icon:ClockIcon,
-      trend:"+2 today",
+      label: "Scheduled Posts",
+      value: stats.scheduler,
+      icon: ClockIcon,
+      trend: "+2 today",
     },
     {
-      label:"Published Posts",
-      value:stats.published,
-      icon:CheckCircleIcon,
-      trend:"All time",
+      label: "Published Posts",
+      value: stats.published,
+      icon: CheckCircleIcon,
+      trend: "All time",
     },
     {
-      label:"Connected Accounts",
-      value:stats.connectedAccounts,
-      icon:CheckCircleIcon,
-      trend:"All time",
+      label: "Connected Accounts",
+      value: stats.connectedAccounts,
+      icon: CheckCircleIcon,
+      trend: "All time",
     }
   ]
   return (
@@ -53,30 +53,30 @@ export default function Dashboard() {
       <div>
 
         <h2 className="text-2xl text-slate-900">Good morning!</h2>
-         <p className="text-slate-500 text-sm mt-0.5">
+        <p className="text-slate-500 text-sm mt-0.5">
           Here's what's happening with your social account today
-         </p>
+        </p>
 
-        
+
       </div>
       {/* Stats cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-          {statCards.map((card) => (
-            <div key={card.label} className="bg-white hover:bg-red-50 relative
+        {statCards.map((card) => (
+          <div key={card.label} className="bg-white hover:bg-red-50 relative
             border border-slate-200 rounded-2xl p-5 hover:border-red-200 transition-all">
-              <div className="flex items-center justify-between mb-4">
-                <div className="text-3xl font-medium text-slate-800 tabular-nums">{card.value}</div>
-                <div className="text-xs absolute right-4 top-4 text-red-500 flex items-center gap-1">
-                  <TrendingUpIcon className="size-3"/>
-                  {card.trend}
-                </div>
-                
-                
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-3xl font-medium text-slate-800 tabular-nums">{card.value}</div>
+              <div className="text-xs absolute right-4 top-4 text-red-500 flex items-center gap-1">
+                <TrendingUpIcon className="size-3" />
+                {card.trend}
               </div>
-              <p className="text-sm text-slate-500 mt-1">{card.label}</p>
-                 
+
+
             </div>
-          ))}
+            <p className="text-sm text-slate-500 mt-1">{card.label}</p>
+
+          </div>
+        ))}
       </div>
       {/* Activity Feed */}
       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
@@ -85,10 +85,10 @@ export default function Dashboard() {
           <span className="text-sm text-slate-400">{activities.length} events</span>
 
         </div>
-        {activities.length==0 ? (
+        {activities.length == 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-6">
             <div className="size-12 bg-slate-100 rouded-xl flex items-center justify-center mb-3">
-              <ActivityIcon className="size-6 text-slate-400"/>
+              <ActivityIcon className="size-6 text-slate-400" />
             </div>
             <p className="text-slate-500">No activity yet</p>
             <p className="text-slate-400 text-sm mt-1"> Connect accounts and schedule posts to see events here.</p>
@@ -100,7 +100,7 @@ export default function Dashboard() {
               hover:bg-slate-50/50 transition-colors">
                 <div className="size-9 rounded-xl flex items-center justify-center shrink-0
                 mt-0.5 bg-zinc-100 text-zinc-600">
-                  <SendIcon className="size-4"/>
+                  <SendIcon className="size-4" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 mb-1">
@@ -109,11 +109,11 @@ export default function Dashboard() {
 
                   </div>
                   <p className="text-sm text-slate-600">{activity.description}</p>
-                <p className="text-sm text-slate-400 mt-1">{activity.timestamp}</p>
+                  <p className="text-sm text-slate-400 mt-1">{activity.timestamp}</p>
 
 
                 </div>
-                
+
               </div>
             ))}
           </div>

@@ -1,12 +1,12 @@
 import express from "express";
 
-import {generateAuthUrl,syncAccounts} from "../controllers/socialAuthController.js";
+import { generateAuthUrl, syncAccounts } from "../controllers/socialAuthController.js";
 import { protect } from "../middlewares/authMiddleware.js"
 
 const socialAuthRouter = express.Router();
 
 
-socialAuthRouter.get('/:platform/url',protect,generateAuthUrl);
-socialAuthRouter.get('/:sync/url',protect,syncAccounts); 
+socialAuthRouter.get('/sync', protect, syncAccounts);
+socialAuthRouter.get('/:platform', protect, generateAuthUrl);
 
 export default socialAuthRouter;

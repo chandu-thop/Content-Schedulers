@@ -1,25 +1,34 @@
 
 import { useState } from 'react';
 import Sidebar from './Sidebar';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import { MenuIcon } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 
-   const pageTitles:Record<string,string>={
-        '/dashboard': 'Dashboard',
-        '/account': ' Social Account',
-        '/scheduler': 'Post Scheduler',
-        '/aicomposer': 'AI Composer'
-        
-    }
+const pageTitles: Record<string, string> = {
+    '/dashboard': 'Dashboard',
+    '/account': ' Social Account',
+    '/scheduler': 'Post Scheduler',
+    '/aicomposer': 'AI Composer'
+
+}
 
 export default function Layout() {
+    const { token, loading } = useAuth();
+    const loction = useLocation();
 
-    const loction=useLocation();
-
-    const title=pageTitles[loction.pathname] || 'SocialAI';
+    const title = pageTitles[loction.pathname] || 'SocialAI';
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
- 
+
+    if (loading) {
+        return <div className="h-screen w-screen flex items-center justify-center bg-slate-50 text-slate-400">Loading...</div>;
+    }
+
+    if (!token) {
+        return <Navigate to="/login" replace />;
+    }
+
     return (
         <div className='flex h-screen bg-slate-50'>
             {/* Mobile Overlay */}
@@ -31,8 +40,8 @@ export default function Layout() {
 
             <div className='flex-1 flex flex-col overflow-hidden'>
                 <header className='h-16 bg-white border-b border-slate-200 flex items-center px-4 md:px-8 gap-4'>
-                    <button className='md:hidden -ml-2 p-2 text-slate-500' onClick={()=> setIsMobileMenuOpen(!isMobileMenuOpen)}>
-                        <MenuIcon/>
+                    <button className='md:hidden -ml-2 p-2 text-slate-500' onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+                        <MenuIcon />
                     </button>
                     <div>
                         <h1 className='text-lg font-semibold text-slate-900'>{title}</h1>
@@ -41,7 +50,7 @@ export default function Layout() {
 
                 </header>
                 <main className="flex-1 overflow-auto p-4 sm:p-6 md:p-8 xl:p-12">
-                  <Outlet />
+                    <Outlet />
                 </main>
             </div>
 
