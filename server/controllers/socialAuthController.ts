@@ -1,28 +1,21 @@
 import { Request, Response } from "express";
 import zernio from "../config/zernio.js";
-import { profile } from "node:console";
 import { User } from "../models/User.js";
-import { Query } from "mongoose";
 import Account from "../models/Account.js";
 import { AuthRequest } from "../middlewares/authMiddleware.js"
 
-const getOrCreateZernioProfile = async (user: any): Promise<String> => {
+const getOrCreateZernioProfile = async (user: any): Promise<string> => {
     try {
-        const result = await zernio.profiles.listProfiles()
-        const data = result.data as any;
-        const profiles: any[] = Array.isArray(data) ? data : data?.profiles || data?.data || [];
-
-        if (profiles.length > 0) {
-            const pid = profiles[0]._id || profiles[0].id;
-            await User.findByIdAndUpdate(user._id, { zernioProfileid: pid });
-            return pid;
+        // Profiles are private to an app user. Never select the first profile
+        // returned by the provider: that can belong to another user.
+        if (user.zernioProfileId) {
+            return user.zernioProfileId;
         }
+
         const createResult = await zernio.profiles.createProfile({
             body: { name: `${user.name || user.email}'s workspace` } as any,
-
         })
         const created = (createResult.data as any)?.profile || createResult.data;
-
         const pid = created?._id || created?.id;
         if (!pid) {
             throw new Error("Failed to create Zernio profile - no ID returned");
@@ -44,9 +37,10 @@ export const generateAuthUrl = async (req: AuthRequest, res: Response): Promise<
     try {
         const { platform } = req.params;
         const profileId = await getOrCreateZernioProfile(req.user);
-        const queryOrigin = req.query.origin as string;
-        const origin = queryOrigin || req.headers.origin || "http://localhost:5173";
-        const redirectUrl = `${origin.replace(/\/$/, "")}/account`;
+        // Use an explicitly configured frontend origin so callback URLs don't
+        // depend on a proxy's Origin header or an arbitrary query parameter.
+        const frontendUrl = process.env.CLIENT_URL || process.env.FRONTEND_URL || "http://localhost:5173";
+        const redirectUrl = new URL("/account", frontendUrl).toString();
 
         const result = await zernio.connect.getConnectUrl({
             path: { platform: platform as any },
@@ -103,6 +97,7 @@ export const syncAccounts = async (req: AuthRequest, res: Response): Promise<voi
             }
 
             const account = await Account.findOneAndUpdate({
+                user: req.user._id,
                 zernioAccountId: zid
             }, {
                 user: req.user._id,
@@ -117,6 +112,14 @@ export const syncAccounts = async (req: AuthRequest, res: Response): Promise<voi
                 })
             syncedAccounts.push(account)
         }
+        // Remove stale local links for this user's provider profile only.
+        const providerIds = zernioAccounts
+            .map((account) => account._id || account.id)
+            .filter(Boolean);
+        await Account.deleteMany({
+            user: req.user._id,
+            zernioAccountId: { $exists: true, $nin: providerIds },
+        });
         res.json(syncedAccounts)
 
     } catch (err: any) {

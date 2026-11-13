@@ -1,7 +1,8 @@
 
 import { PLATFORMS } from "../assets/assets"
 import { PlusIcon } from "lucide-react"
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import AccountList from "../components/AccountList";
 import PlatformPickerModal from "../components/PlatformPickerModal";
 
@@ -11,13 +12,14 @@ import { useToast } from "../context/ToastContext";
 export default function Account() {
   const { apiFetch } = useAuth();
   const { showToast } = useToast();
+  const location = useLocation();
   const [accounts, setAccounts] = useState<any[]>([]);
+  const [loadingAccounts, setLoadingAccounts] = useState(true);
+  const callbackHandled = useRef(false);
 
   const fetchAccounts = async (isSync = false, platform?: string | null, successMsg?: string) => {
     try {
-      if (isSync) {
-        await apiFetch("/api/Oauth/sync");
-      }
+      if (isSync) await apiFetch("/api/Oauth/sync");
       const data = await apiFetch("/api/accounts");
       setAccounts(data);
       if (successMsg) {
@@ -30,8 +32,27 @@ export default function Account() {
   }
 
   useEffect(() => {
-    fetchAccounts(true);
-  }, [])
+    const params = new URLSearchParams(location.search);
+    const callbackResult = params.get("success") === "true" || params.has("accountId") || params.has("connected");
+    const callbackError = params.get("error") || params.get("error_description");
+
+    if (callbackHandled.current) return;
+    callbackHandled.current = true;
+    setLoadingAccounts(true);
+
+    if (callbackError) {
+      showToast(`Account connection failed: ${callbackError}`, "error");
+    }
+
+    // The provider redirects back only after completing OAuth. Sync at that
+    // point so the newly connected account is reflected immediately.
+    void fetchAccounts(callbackResult || !callbackError).finally(() => {
+      setLoadingAccounts(false);
+      if (location.search) {
+        window.history.replaceState({}, document.title, location.pathname);
+      }
+    });
+  }, [location.pathname, location.search]);
 
   const [connecting, setConnecting] = useState<string | null>(null)
   const [showPlatformPicker, setShowPlatformPicker] = useState(false)
@@ -87,7 +108,11 @@ export default function Account() {
         />
       )}
       {/* Connected accounts list */}
-      <AccountList accounts={accounts} onDisconnect={handleDisconnect} />
+      {loadingAccounts ? (
+        <p className="text-sm text-slate-500">Loading connected accounts…</p>
+      ) : (
+        <AccountList accounts={accounts} onDisconnect={handleDisconnect} />
+      )}
 
 
     </div>

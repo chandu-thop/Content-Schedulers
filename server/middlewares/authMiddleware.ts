@@ -13,6 +13,10 @@ export const protect =async (req:AuthRequest,res:Response,next:NextFunction)=>{
             token =req.headers.authorization.split(" ")[1];
             const decoded : any =jwt.verify(token,process.env.JWT_SECRET!)
             req.user=await User.findById(decoded.id).select("-password");
+            if (!req.user) {
+                res.status(401).json({ message: "User for this session no longer exists" });
+                return;
+            }
             next();
         }catch(error){
             const message = error instanceof Error ? error.message : "Not authorized, token failed";
