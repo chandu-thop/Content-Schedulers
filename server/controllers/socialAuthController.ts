@@ -37,10 +37,16 @@ export const generateAuthUrl = async (req: AuthRequest, res: Response): Promise<
     try {
         const { platform } = req.params;
         const profileId = await getOrCreateZernioProfile(req.user);
-        // Use an explicitly configured frontend origin so callback URLs don't
-        // depend on a proxy's Origin header or an arbitrary query parameter.
-        const frontendUrl = process.env.CLIENT_URL || process.env.FRONTEND_URL || "http://localhost:5173";
-        const redirectUrl = new URL("/account", frontendUrl).toString();
+        // Prefer an explicit deployment URL, otherwise return to the origin
+        // from which the authenticated user initiated the connection.
+        const requestedOrigin = req.query.origin;
+        const frontendUrl = process.env.CLIENT_URL || process.env.FRONTEND_URL ||
+            (typeof requestedOrigin === "string" ? requestedOrigin : "http://localhost:5173");
+        const parsedFrontendUrl = new URL(frontendUrl);
+        if (parsedFrontendUrl.protocol !== "http:" && parsedFrontendUrl.protocol !== "https:") {
+            throw new Error("Frontend URL must use HTTP or HTTPS");
+        }
+        const redirectUrl = new URL("/account", parsedFrontendUrl.origin).toString();
 
         const result = await zernio.connect.getConnectUrl({
             path: { platform: platform as any },
